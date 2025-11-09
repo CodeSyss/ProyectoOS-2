@@ -4,12 +4,23 @@
  */
 package main.classes;
 
+import helpers.CustomQueue;
+import helpers.MyList;
+
 /**
  *
  * @author payto
  */
-
 //Nuestro Simulador de archivos 
 public class Simulator {
-    
+
+    //Lista para procesos
+    private final MyList<Process> MasterProcessList;
+    // Cola para E/S a disco
+    private final CustomQueue<IoRequest> DiskRequests;
+
+    public Simulator() {
+        this.MasterProcessList = new MyList<>();
+        this.DiskRequests = new CustomQueue<>();
+    }
 }

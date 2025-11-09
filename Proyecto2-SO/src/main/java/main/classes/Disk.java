@@ -8,6 +8,6 @@ package main.classes;
  *
  * @author payto
  */
-public class Disk {
+public class Disk { 
     
 }
