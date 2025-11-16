@@ -57,7 +57,7 @@ public class Disk {
                 previousBlock = i;
 
                 if (blocksFound == blocksNeeded) {
-                    System.out.println("Disk: Asignsdo" + blocksNeeded + " bloques para " + owner.getProcessName() + ". Primer bloque: " + firstBlock);
+                    System.out.println("Disk: Asignado" + blocksNeeded + " bloques para " + owner.getProcessName() + ". Primer bloque: " + firstBlock);
                     return firstBlock; // Success!
                 }
             }
@@ -93,4 +93,7 @@ public class Disk {
         }
         return blockOwners[index].getColor();
     }
+    // Solucionar en su momento
+    //Color por defecto para bloques libres 
+    //Color verde para bloques ocupados  
 }

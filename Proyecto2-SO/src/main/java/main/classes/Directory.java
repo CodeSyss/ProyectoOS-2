@@ -6,33 +6,26 @@ package main.classes;
 
 /**
  *
- * @author ile1
- */ 
-
+ * @author Carlos Hernandez
+ */
 import helpers.MyList;
 
 public class Directory extends FileSystemNode {
-
 
     private MyList<FileSystemNode> children;
 
     private int startingBlock;
     private Process ownerProcess;
 
-
     public Directory(String name, int startingBlock, Process ownerProcess) {
-        super(name); 
+        super(name);
         this.startingBlock = startingBlock;
         this.ownerProcess = ownerProcess;
-        this.children = new MyList<>(); 
+        this.children = new MyList<>();
     }
-
-
 
     public void addChild(FileSystemNode node) {
         this.children.add(node);
-        // actualizar el bloque del directorio en el disco
-        // para añadir el nombre del hijo.
     }
 
     public void removeChild(FileSystemNode node) {
@@ -44,7 +37,6 @@ public class Directory extends FileSystemNode {
     }
 
     // --- Getters del "ticket" ---
-
     public int getStartingBlock() {
         return startingBlock;
     }
