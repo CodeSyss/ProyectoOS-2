@@ -19,7 +19,6 @@ public class MyList<T> {
         this.size = 0;
     }
 
-
     public void add(T element) {
         if (size == elements.length) {
             ensureCapacity();
