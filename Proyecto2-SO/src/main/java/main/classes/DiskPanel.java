@@ -4,27 +4,27 @@
  */
 package main.classes;
 
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Font;
 import javax.swing.JPanel;
 
-
 public class DiskPanel extends JPanel {
 
     private final Disk disk;
     private final int blockSize = 30; // Tamaño de cada bloque (en píxeles)
     private final int blocksPerRow = 25; // Número de bloques por fila para el diseño
+    private final int legendHeight = 50; // Altura reservada para la leyenda (aumentada)
 
     // Constructor que recibe la instancia del disco
     public DiskPanel(Disk disk) {
         this.disk = disk;
         int rows = (int) Math.ceil((double) disk.getTotalBlocks() / blocksPerRow);
         int width = blocksPerRow * (blockSize + 2) + 10; // +2 para el espaciado
-        int height = rows * (blockSize + 2) + 40; // +2 para el espaciado, +40 para etiquetas
+        int height = legendHeight + rows * (blockSize + 2) + 10; // Leyenda arriba + bloques
         setPreferredSize(new Dimension(width, height));
+        setBackground(gui.clasess.UITheme.COLOR_BACKGROUND);
     }
 
     // Sobreescribir el método paintComponent para realizar el dibujo
@@ -33,72 +33,85 @@ public class DiskPanel extends JPanel {
         super.paintComponent(g);
 
         int totalBlocks = disk.getTotalBlocks();
-        int x, y;
-        
-        // Configurar la fuente para las etiquetas de los bloques
+
+        // PRIMERO: Dibujar la leyenda arriba
+        drawLegend(g);
+
+        // SEGUNDO: Dibujar los bloques debajo de la leyenda
         g.setFont(new Font("Monospaced", Font.PLAIN, 10));
 
-        // Dibujar cada bloque
         for (int i = 0; i < totalBlocks; i++) {
-            
+
             // Calcular la posición (x, y) del bloque en la cuadrícula
             int row = i / blocksPerRow;
             int col = i % blocksPerRow;
-            
-            // Calcular la posición en píxeles. Agregamos un pequeño espaciado (+2)
-            x = 5 + col * (blockSize + 2);
-            y = 5 + row * (blockSize + 2);
-            
+
+            // Calcular la posición en píxeles, sumando legendHeight para dejar espacio
+            // arriba
+            int x = 5 + col * (blockSize + 2);
+            int y = legendHeight + 5 + row * (blockSize + 2);
+
             // 1. Obtener el color para el bloque (usa el getter de tu clase Disk)
             Color blockColor = disk.getColorForBlock(i);
-            
+
             // 2. Dibujar el bloque rellenado
             g.setColor(blockColor);
             g.fillRect(x, y, blockSize, blockSize);
-            
+
             // 3. Dibujar el borde del bloque para mejor distinción
             g.setColor(Color.BLACK);
             g.drawRect(x, y, blockSize, blockSize);
-            
-            // 4. Opcional: Escribir el índice del bloque en el centro
-            // Esto puede ser útil si los bloques son lo suficientemente grandes
-            g.setColor(Color.DARK_GRAY);
-            String indexStr = String.valueOf(i);
-            // Ajuste simple para centrar el texto (aproximadamente)
-            g.drawString(indexStr, x + (blockSize / 2) - 4, y + (blockSize / 2) + 4);
         }
-        
-        // Opcional: Dibujar la leyenda (abajo)
-       // drawLegend(g, totalBlocks, x, y);
     }
-    
-    // Método auxiliar para dibujar una leyenda
-    private void drawLegend(Graphics g, int totalBlocks, int lastX, int lastY) {
-        g.setFont(new Font("SansSerif", Font.BOLD, 12));
+
+    // Método auxiliar para dibujar una leyenda en la parte superior
+    private void drawLegend(Graphics g) {
+        g.setFont(new Font("SansSerif", Font.BOLD, 13));
         g.setColor(Color.BLACK);
-        
-        int rows = (int) Math.ceil((double) totalBlocks / blocksPerRow);
-        int legendY = 15 + rows * (blockSize + 2); // Colocar debajo de la última fila
+
+        int legendY = 20; // Posición Y de la leyenda (arriba)
 
         g.drawString("Leyenda:", 5, legendY);
 
-        int boxSize = 10;
-        int currentX = 60;
-        
-        // Libre
+        int boxSize = 15;
+        int currentX = 75;
+
+        // Libre (gris)
         g.setColor(Color.LIGHT_GRAY);
-        g.fillRect(currentX, legendY - boxSize, boxSize, boxSize);
+        g.fillRect(currentX, legendY - boxSize + 2, boxSize, boxSize);
         g.setColor(Color.BLACK);
-        g.drawRect(currentX, legendY - boxSize, boxSize, boxSize);
+        g.drawRect(currentX, legendY - boxSize + 2, boxSize, boxSize);
         g.drawString("Libre", currentX + boxSize + 5, legendY);
-        
-        // Ocupado (ejemplo, asume que el proceso asignará un color diferente a LIGHT_GRAY)
+
+        // Ocupado - Mostrar varios colores de ejemplo
         currentX += 80;
-        g.setColor(new Color(100, 150, 255)); // Un color de ejemplo para "ocupado"
-        g.fillRect(currentX, legendY - boxSize, boxSize, boxSize);
+
+        Color[] exampleColors = {
+                new Color(100, 150, 255), // Azul
+                new Color(255, 150, 100), // Naranja
+                new Color(150, 255, 100) // Verde
+        };
+
+        int colorBoxSize = 12;
+        int spacing = 2;
+
+        for (int i = 0; i < exampleColors.length; i++) {
+            g.setColor(exampleColors[i]);
+            g.fillRect(currentX + i * (colorBoxSize + spacing),
+                    legendY - boxSize + 2, colorBoxSize, colorBoxSize);
+            g.setColor(Color.BLACK);
+            g.drawRect(currentX + i * (colorBoxSize + spacing),
+                    legendY - boxSize + 2, colorBoxSize, colorBoxSize);
+        }
+
         g.setColor(Color.BLACK);
-        g.drawRect(currentX, legendY - boxSize, boxSize, boxSize);
-        g.drawString("Ocupado", currentX + boxSize + 5, legendY);
+        g.drawString("Ocupado (cada proceso tiene un color único)",
+                currentX + (colorBoxSize + spacing) * exampleColors.length + 5, legendY);
+
+        // Nota adicional
+        g.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        g.drawString("Tip: El color coincide con la columna 'Color' en la Tabla de Asignación",
+                5, legendY + 15);
     }
 
     /**
