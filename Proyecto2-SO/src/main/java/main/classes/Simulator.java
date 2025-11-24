@@ -100,6 +100,8 @@ public class Simulator implements ActionListener {
                 randomCylinder);
 
         this.diskRequest.enqueue(request);
+        // p.setState(Process.ProcessState.BLOCKED); // REMOVED as per user request
+        // (Stay READY)
 
         updateGUI();
     }
@@ -123,6 +125,8 @@ public class Simulator implements ActionListener {
                 randomCylinder);
 
         this.diskRequest.enqueue(request);
+        // p.setState(Process.ProcessState.BLOCKED); // REMOVED as per user request
+        // (Stay READY)
 
         updateGUI();
     }
