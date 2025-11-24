@@ -9,7 +9,7 @@ package main.classes;
  * @author payto
  */
 
-//Operaciones de entrada y salida a disco
+// Operaciones de entrada y salida a disco
 public class IoRequest {
 
     public enum OperationType {
@@ -20,19 +20,19 @@ public class IoRequest {
         DELETE
     }
 
-    private Process requestingProcess; 
-    private OperationType type;   
-    private String path;          
-    private int blockCount;       
+    private Process requestingProcess;
+    private OperationType type;
+    private String path;
+    private int blockCount;
+    private int cylinderIndex; // Cilindro destino para simulación de planificación
 
-
-    public IoRequest(Process requestingProcess, OperationType type, String path, int blockCount) {
+    public IoRequest(Process requestingProcess, OperationType type, String path, int blockCount, int cylinderIndex) {
         this.requestingProcess = requestingProcess;
         this.type = type;
         this.path = path;
         this.blockCount = blockCount;
+        this.cylinderIndex = cylinderIndex;
     }
-
 
     public Process getRequestingProcess() {
         return requestingProcess;
@@ -48,5 +48,9 @@ public class IoRequest {
 
     public int getBlockCount() {
         return blockCount;
+    }
+
+    public int getCylinderIndex() {
+        return cylinderIndex;
     }
 }

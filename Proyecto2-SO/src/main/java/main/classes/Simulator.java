@@ -68,6 +68,12 @@ public class Simulator implements ActionListener {
     }
 
     public void tickDeSimulacion() {
+        // Actualizar el algoritmo seleccionado desde la GUI
+        String selectedAlgo = (String) this.gui.getComboPlanificador().getSelectedItem();
+        if (selectedAlgo != null) {
+            scheduler.setAlgorithm(selectedAlgo);
+        }
+
         boolean algoCambio = scheduler.procesarSiguienteSolicitud();
         if (algoCambio) {
             updateGUI();
@@ -76,10 +82,13 @@ public class Simulator implements ActionListener {
 
     public void requestCreateFile(String path, int blockCount, String username) {
 
+        // Asignar un cilindro aleatorio para propósitos de simulación de planificación
+        int randomCylinder = (int) (Math.random() * 350);
+
         String processName = username + " (Create " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("CREAR " + path + " (" + blockCount + " bloque" + (blockCount > 1 ? "s" : "") + ")");
+        p.setCurrentOperation("CREAR " + path + " (" + blockCount + " blq) [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -87,7 +96,8 @@ public class Simulator implements ActionListener {
                 p,
                 IoRequest.OperationType.CREATE_FILE,
                 path,
-                blockCount);
+                blockCount,
+                randomCylinder);
 
         this.diskRequest.enqueue(request);
 
@@ -96,10 +106,12 @@ public class Simulator implements ActionListener {
 
     public void requestCreateDirectory(String path, String username) {
 
+        int randomCylinder = (int) (Math.random() * 350);
+
         String processName = username + " (Create Dir: " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("CREAR DIR " + path);
+        p.setCurrentOperation("CREAR DIR " + path + " [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -107,8 +119,8 @@ public class Simulator implements ActionListener {
                 p,
                 IoRequest.OperationType.CREATE_DIRECTORY,
                 path,
-                1 // <-- Un Directorio siempre ocupa 1 bloque (decisión de diseño)
-        );
+                1, // <-- Un Directorio siempre ocupa 1 bloque (decisión de diseño)
+                randomCylinder);
 
         this.diskRequest.enqueue(request);
 

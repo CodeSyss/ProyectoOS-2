@@ -6,18 +6,17 @@ package main.classes;
 
 import java.awt.Color;
 
-
-
 /**
  *
  * @author payto
  */
 public class Disk {
-    private int[] allocationTable; //Identificador de disponibilidad del bloque y su tabla de asignacion
+    private int[] allocationTable; // Identificador de disponibilidad del bloque y su tabla de asignacion
 
-    private Process[] blockOwners; //asignar color en posicion correspondiente
+    private Process[] blockOwners; // asignar color en posicion correspondiente
 
     private int totalBlocks;
+    private int headPosition = 0; // Posición actual del cabezal
 
     public Disk(int totalBlocks) {
         this.totalBlocks = totalBlocks;
@@ -29,9 +28,8 @@ public class Disk {
             this.blockOwners[i] = null;
         }
     }
-    
-    
-    //Asignar bloques 
+
+    // Asignar bloques
     public int assignBlocks(Process owner, int blocksNeeded) {
         if (blocksNeeded <= 0) {
             return -1;
@@ -57,7 +55,8 @@ public class Disk {
                 previousBlock = i;
 
                 if (blocksFound == blocksNeeded) {
-                    System.out.println("Disk: Asignado" + blocksNeeded + " bloques para " + owner.getProcessName() + ". Primer bloque: " + firstBlock);
+                    System.out.println("Disk: Asignado" + blocksNeeded + " bloques para " + owner.getProcessName()
+                            + ". Primer bloque: " + firstBlock);
                     return firstBlock; // Success!
                 }
             }
@@ -66,7 +65,7 @@ public class Disk {
         return -1;
     }
 
-    //Liberar bloques 
+    // Liberar bloques
     public void freeBlocks(int startBlock) {
         int currentBlock = startBlock;
         int nextBlock;
@@ -87,13 +86,18 @@ public class Disk {
         return totalBlocks;
     }
 
+    public int getHeadPosition() {
+        return headPosition;
+    }
+
+    public void setHeadPosition(int headPosition) {
+        this.headPosition = headPosition;
+    }
+
     public Color getColorForBlock(int index) {
         if (index < 0 || index >= totalBlocks || blockOwners[index] == null) {
             return Color.LIGHT_GRAY; // Color for "FREE"
         }
         return blockOwners[index].getColor();
     }
-    // Solucionar en su momento
-    //Color por defecto para bloques libres 
-    //Color verde para bloques ocupados  
 }

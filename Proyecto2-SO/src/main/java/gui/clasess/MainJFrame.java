@@ -161,8 +161,6 @@ public class MainJFrame extends javax.swing.JFrame {
 
                 jTreeArchivos.setCellRenderer(new FileSystemRenderer());
 
-                // --- CONFIGURACIÓN DE VENTANA ---
-                // Tamaño "mínimo" (normal) por defecto, NO maximizado
                 this.setSize(1100, 700);
                 this.setLocationRelativeTo(null); // Centrar
         }
@@ -252,7 +250,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 jLabel2.setText("Planificador:");
 
                 jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(
-                                new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+                                new String[] { "FIFO", "SSTF", "SCAN", "C-SCAN" }));
 
                 jButton1.setText("Crear Directorio");
                 jButton2.setText("Eliminar");
@@ -308,7 +306,6 @@ public class MainJFrame extends javax.swing.JFrame {
                                 MainJFrame gui = new MainJFrame();
                                 gui.setVisible(true);
 
-                                // Crear el simulador pasándole la GUI y el disco que acabamos de crear
                                 Simulator simulator = new Simulator(gui, gui.myDisk);
                                 gui.setSimulator(simulator);
                         }
