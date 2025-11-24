@@ -79,6 +79,7 @@ public class Simulator implements ActionListener {
         String processName = username + " (Create " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
+        p.setCurrentOperation("CREAR " + path + " (" + blockCount + " bloque" + (blockCount > 1 ? "s" : "") + ")");
 
         this.masterProcessList.add(p);
 
@@ -98,6 +99,7 @@ public class Simulator implements ActionListener {
         String processName = username + " (Create Dir: " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
+        p.setCurrentOperation("CREAR DIR " + path);
 
         this.masterProcessList.add(p);
 
@@ -198,7 +200,8 @@ public class Simulator implements ActionListener {
             modelProcesos.addRow(new Object[] {
                     p.getProcessID(),
                     p.getProcessName(),
-                    p.getState()
+                    p.getState(),
+                    p.getCurrentOperation() // Nueva columna
             });
         }
 

@@ -81,7 +81,7 @@ public class MainJFrame extends javax.swing.JFrame {
 
                 // 2. Crear las JTables
                 modeloProcesos = new DefaultTableModel(
-                                new Object[] { "ID", "Nombre", "Estado" }, 0);
+                                new Object[] { "ID", "Nombre", "Estado", "Operación Solicitada" }, 0);
                 jTableProcesos = new JTable(modeloProcesos);
                 UITheme.styleTable(jTableProcesos);
 

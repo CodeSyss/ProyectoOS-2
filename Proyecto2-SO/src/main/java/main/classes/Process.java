@@ -13,7 +13,6 @@ import java.util.Random;
 
 public class Process {
 
-
     public enum ProcessState {
         NEW,
         READY,
@@ -79,6 +78,16 @@ public class Process {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    private String currentOperation = "-";
+
+    public String getCurrentOperation() {
+        return currentOperation;
+    }
+
+    public void setCurrentOperation(String currentOperation) {
+        this.currentOperation = currentOperation;
     }
 
     @Override
