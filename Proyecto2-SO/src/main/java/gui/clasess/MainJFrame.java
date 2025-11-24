@@ -156,8 +156,31 @@ public class MainJFrame extends javax.swing.JFrame {
                 pnlControls.add(jButton2); // Eliminar
                 pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
 
+                pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
+
                 this.getContentPane().add(pnlControls, BorderLayout.NORTH);
                 this.getContentPane().add(jSplitPanePrincipal, BorderLayout.CENTER);
+
+                JPanel pnlStats = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 5));
+                pnlStats.setBackground(UITheme.COLOR_SECONDARY);
+                pnlStats.setBorder(new javax.swing.border.EmptyBorder(5, 10, 5, 10));
+
+                lblTotalBlocks = new javax.swing.JLabel("Total: " + myDisk.getTotalBlocks());
+                lblUsedBlocks = new javax.swing.JLabel("Usados: 0");
+                lblFreeBlocks = new javax.swing.JLabel("Libres: " + myDisk.getTotalBlocks());
+
+                lblTotalBlocks.setForeground(Color.BLACK);
+                lblUsedBlocks.setForeground(Color.BLACK);
+                lblFreeBlocks.setForeground(Color.BLACK);
+                lblTotalBlocks.setFont(UITheme.FONT_BOLD);
+                lblUsedBlocks.setFont(UITheme.FONT_BOLD);
+                lblFreeBlocks.setFont(UITheme.FONT_BOLD);
+
+                pnlStats.add(lblTotalBlocks);
+                pnlStats.add(lblUsedBlocks);
+                pnlStats.add(lblFreeBlocks);
+
+                this.getContentPane().add(pnlStats, BorderLayout.SOUTH);
 
                 jTreeArchivos.setCellRenderer(new FileSystemRenderer());
 
@@ -215,6 +238,16 @@ public class MainJFrame extends javax.swing.JFrame {
 
         public javax.swing.JLabel getLabelPlanificador() {
                 return jLabel2;
+        }
+
+        // Labels de Estadísticas
+        private javax.swing.JLabel lblTotalBlocks;
+        private javax.swing.JLabel lblUsedBlocks;
+        private javax.swing.JLabel lblFreeBlocks;
+
+        public void updateStats(int used, int free) {
+                lblUsedBlocks.setText("Usados: " + used);
+                lblFreeBlocks.setText("Libres: " + free);
         }
 
         /**

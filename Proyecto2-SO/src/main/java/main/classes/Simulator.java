@@ -36,7 +36,6 @@ public class Simulator implements ActionListener {
 
     private final Scheduler scheduler;
     private Disk disk;
-    // 17*17= 289 bloques de preferencia
 
     public Simulator(MainJFrame gui, Disk disk) {
 
@@ -223,6 +222,9 @@ public class Simulator implements ActionListener {
 
         updateAllocationTable();
         this.gui.getPanelVisorDisco().repaint();
+
+        // Actualizar Estadísticas
+        this.gui.updateStats(disk.getUsedBlocksCount(), disk.getFreeBlocksCount());
     }
 
     private void updateAllocationTable() {

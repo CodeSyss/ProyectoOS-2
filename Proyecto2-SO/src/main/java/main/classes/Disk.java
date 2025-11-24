@@ -100,4 +100,19 @@ public class Disk {
         }
         return blockOwners[index].getColor();
     }
+
+    // --- STATISTICS ---
+    public int getUsedBlocksCount() {
+        int used = 0;
+        for (int i = 0; i < totalBlocks; i++) {
+            if (allocationTable[i] != 0) {
+                used++;
+            }
+        }
+        return used;
+    }
+
+    public int getFreeBlocksCount() {
+        return totalBlocks - getUsedBlocksCount();
+    }
 }
