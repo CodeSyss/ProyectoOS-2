@@ -119,6 +119,7 @@ public class Simulator implements ActionListener {
         this.gui.getBtnEliminar().addActionListener(this);
         this.gui.getRadioModoAdmin().addActionListener(this);
         this.gui.getRadioModoUsuario().addActionListener(this);
+        this.gui.getBtnCrearProcesosAleatorios().addActionListener(this);
     }
 
     public void onCreationSuccess(Process process, String path, IoRequest.OperationType type, int startBlock,
@@ -170,7 +171,21 @@ public class Simulator implements ActionListener {
             logicaModoAdmin();
         } else if (source == this.gui.getRadioModoUsuario()) {
             logicaModoUsuario();
+        } else if (source == this.gui.getBtnCrearProcesosAleatorios()) {
+            accionCrearProcesosAleatorios();
         }
+    }
+
+    private void accionCrearProcesosAleatorios() {
+        // Crear 10 procesos aleatorios
+        for (int i = 1; i <= 10; i++) {
+            int numBloques = (int) (Math.random() * 10) + 1;
+            String nombreArchivo = "Proceso_Auto_" + i;
+
+            requestCreateFile(nombreArchivo, numBloques, "Admin");
+        }
+        JOptionPane.showMessageDialog(gui, "Se han solicitado 10 procesos aleatorios.", "Información",
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void updateGUI() {
@@ -341,6 +356,7 @@ public class Simulator implements ActionListener {
         this.gui.getBtnCrearDirectorio().setVisible(true); // jButton1
         this.gui.getBtnEliminar().setVisible(true); // jButton2
         this.gui.getBtnCrearArchivo().setVisible(true); // jButton3
+        this.gui.getBtnCrearProcesosAleatorios().setVisible(true); // Nuevo botón
 
         this.gui.getComboPlanificador().setVisible(true); // jComboBox1
         this.gui.getLabelPlanificador().setVisible(true); // jLabel2
@@ -353,6 +369,7 @@ public class Simulator implements ActionListener {
         this.gui.getBtnCrearDirectorio().setVisible(false); // jButton1
         this.gui.getBtnEliminar().setVisible(false); // jButton2
         this.gui.getBtnCrearArchivo().setVisible(false); // jButton3
+        this.gui.getBtnCrearProcesosAleatorios().setVisible(false); // Nuevo botón
 
         this.gui.getComboPlanificador().setVisible(false); // jComboBox1
         this.gui.getLabelPlanificador().setVisible(false); // jLabel2

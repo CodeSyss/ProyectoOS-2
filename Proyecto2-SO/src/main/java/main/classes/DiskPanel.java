@@ -34,31 +34,20 @@ public class DiskPanel extends JPanel {
 
         int totalBlocks = disk.getTotalBlocks();
 
-        // PRIMERO: Dibujar la leyenda arriba
         drawLegend(g);
-
-        // SEGUNDO: Dibujar los bloques debajo de la leyenda
         g.setFont(new Font("Monospaced", Font.PLAIN, 10));
 
         for (int i = 0; i < totalBlocks; i++) {
 
-            // Calcular la posición (x, y) del bloque en la cuadrícula
             int row = i / blocksPerRow;
             int col = i % blocksPerRow;
-
-            // Calcular la posición en píxeles, sumando legendHeight para dejar espacio
-            // arriba
+            
             int x = 5 + col * (blockSize + 2);
             int y = legendHeight + 5 + row * (blockSize + 2);
-
-            // 1. Obtener el color para el bloque (usa el getter de tu clase Disk)
             Color blockColor = disk.getColorForBlock(i);
 
-            // 2. Dibujar el bloque rellenado
             g.setColor(blockColor);
             g.fillRect(x, y, blockSize, blockSize);
-
-            // 3. Dibujar el borde del bloque para mejor distinción
             g.setColor(Color.BLACK);
             g.drawRect(x, y, blockSize, blockSize);
         }
@@ -69,7 +58,7 @@ public class DiskPanel extends JPanel {
         g.setFont(new Font("SansSerif", Font.BOLD, 13));
         g.setColor(Color.BLACK);
 
-        int legendY = 20; // Posición Y de la leyenda (arriba)
+        int legendY = 20; 
 
         g.drawString("Leyenda:", 5, legendY);
 
@@ -114,10 +103,6 @@ public class DiskPanel extends JPanel {
                 5, legendY + 15);
     }
 
-    /**
-     * Llama a este método para actualizar la vista después de una operación
-     * (asignar o liberar bloques).
-     */
     public void updateView() {
         repaint();
     }

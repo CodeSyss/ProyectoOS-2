@@ -23,7 +23,7 @@ import main.classes.Simulator;
  */
 public class MainJFrame extends javax.swing.JFrame {
 
-        Disk myDisk = new Disk(289);
+        Disk myDisk = new Disk(350);
         DiskPanel diskView = new DiskPanel(myDisk);
 
         private static final java.util.logging.Logger logger = java.util.logging.Logger
@@ -39,6 +39,9 @@ public class MainJFrame extends javax.swing.JFrame {
         private DefaultTableModel modeloProcesos;
         private DefaultTableModel modeloAsignacion;
 
+        // Botón nuevo
+        private javax.swing.JButton btnCrearProcesosAleatorios;
+
         public MainJFrame() {
                 // Configurar el tema antes de iniciar componentes
                 UITheme.setupUI();
@@ -52,6 +55,10 @@ public class MainJFrame extends javax.swing.JFrame {
                 UITheme.styleButton(jButton1, false); // Crear Directorio
                 UITheme.styleButton(jButton2, true); // Eliminar (Destructivo)
                 UITheme.styleButton(jButton3, false); // Crear Archivo
+
+                // Inicializar y estilizar el nuevo botón
+                btnCrearProcesosAleatorios = new javax.swing.JButton("Crear 10 Procesos");
+                UITheme.styleButton(btnCrearProcesosAleatorios, false);
 
                 // Estilizar Labels
                 jLabel1.setFont(UITheme.FONT_BOLD); // Modo
@@ -147,6 +154,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 pnlControls.add(jButton3); // Crear Archivo
                 pnlControls.add(jButton1); // Crear Directorio
                 pnlControls.add(jButton2); // Eliminar
+                pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
 
                 this.getContentPane().add(pnlControls, BorderLayout.NORTH);
                 this.getContentPane().add(jSplitPanePrincipal, BorderLayout.CENTER);
@@ -185,6 +193,10 @@ public class MainJFrame extends javax.swing.JFrame {
 
         public javax.swing.JButton getBtnEliminar() {
                 return jButton2;
+        }
+
+        public javax.swing.JButton getBtnCrearProcesosAleatorios() {
+                return btnCrearProcesosAleatorios;
         }
 
         public javax.swing.JRadioButton getRadioModoAdmin() {
@@ -249,8 +261,6 @@ public class MainJFrame extends javax.swing.JFrame {
                 jPanel1.setBackground(new java.awt.Color(255, 255, 255));
                 jLabel3.setFont(new java.awt.Font("Yu Gothic UI Semibold", 1, 14)); // NOI18N
                 jLabel3.setText("Explorador de Archivos");
-
-                // No layout code here for jPanel1, handled in constructor
 
                 jTabbedPane1.setBackground(new java.awt.Color(255, 255, 255));
 
