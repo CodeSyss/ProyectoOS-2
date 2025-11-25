@@ -15,6 +15,8 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import javax.swing.Timer;
 
 /**
@@ -193,17 +195,37 @@ public class Simulator implements ActionListener {
         }
     }
 
-    private void accionCrearProcesosAleatorios() {
-        // Crear 10 procesos aleatorios
+private void accionCrearProcesosAleatorios() {
+    try (FileWriter writer = new FileWriter("procesos.csv")) {
+        // Escribir encabezado del CSV
+        writer.write("ID,Nombre,Estado,Operacion,Bloques_Solicitados,Usuario\n");
+        
+        // Crear y guardar 10 procesos aleatorios
         for (int i = 1; i <= 10; i++) {
             int numBloques = (int) (Math.random() * 10) + 1;
             String nombreArchivo = "Proceso_Auto_" + i;
 
+            // Escribir directamente en el CSV
+            writer.write(String.format("\"P%d\",\"%s\",\"Solicitado\",\"Crear archivo\",%d,\"Admin\"\n", 
+                i, nombreArchivo, numBloques));
+            
             requestCreateFile(nombreArchivo, numBloques, "Admin");
         }
-        JOptionPane.showMessageDialog(gui, "Se han solicitado 10 procesos aleatorios.", "Información",
-                JOptionPane.INFORMATION_MESSAGE);
+        
+        JOptionPane.showMessageDialog(gui, 
+            "Se han solicitado 10 procesos aleatorios y guardado en 'procesos.csv'.", 
+            "Información",
+            JOptionPane.INFORMATION_MESSAGE);
+            
+    } catch (IOException e) {
+        System.err.println("Error al guardar procesos en CSV: " + e.getMessage());
+        JOptionPane.showMessageDialog(gui, 
+            "Error al guardar el archivo CSV: " + e.getMessage(), 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
     }
+}
+
 
     public void updateGUI() {
 
