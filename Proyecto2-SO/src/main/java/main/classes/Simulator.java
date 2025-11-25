@@ -9,6 +9,9 @@ import helpers.MyList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import gui.clasess.MainJFrame;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -139,6 +142,7 @@ public class Simulator implements ActionListener {
         this.gui.getRadioModoAdmin().addActionListener(this);
         this.gui.getRadioModoUsuario().addActionListener(this);
         this.gui.getBtnCrearProcesosAleatorios().addActionListener(this);
+        this.gui.getBtnCargarProcesosCsv().addActionListener(this);
     }
 
     public void onCreationSuccess(Process process, String path, IoRequest.OperationType type, int startBlock,
@@ -176,24 +180,26 @@ public class Simulator implements ActionListener {
                 new javax.swing.tree.TreePath(newNodeWrapper.getPath()));
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object source = e.getSource();
+@Override
+public void actionPerformed(ActionEvent e) {
+    Object source = e.getSource();
 
-        if (source == this.gui.getBtnCrearArchivo()) {
-            accionCrearArchivo();
-        } else if (source == this.gui.getBtnCrearDirectorio()) {
-            accionCrearDirectorio();
-        } else if (source == this.gui.getBtnEliminar()) {
-            accionEliminar();
-        } else if (source == this.gui.getRadioModoAdmin()) {
-            logicaModoAdmin();
-        } else if (source == this.gui.getRadioModoUsuario()) {
-            logicaModoUsuario();
-        } else if (source == this.gui.getBtnCrearProcesosAleatorios()) {
-            accionCrearProcesosAleatorios();
-        }
+    if (source == this.gui.getBtnCrearArchivo()) {
+        accionCrearArchivo();
+    } else if (source == this.gui.getBtnCrearDirectorio()) {
+        accionCrearDirectorio();
+    } else if (source == this.gui.getBtnEliminar()) {
+        accionEliminar();
+    } else if (source == this.gui.getRadioModoAdmin()) {
+        logicaModoAdmin();
+    } else if (source == this.gui.getRadioModoUsuario()) {
+        logicaModoUsuario();
+    } else if (source == this.gui.getBtnCrearProcesosAleatorios()) {
+        accionCrearProcesosAleatorios();
+    } else if (source == this.gui.getBtnCargarProcesosCsv()) {
+        accionCargarProcesosCsv();
     }
+}
 
 private void accionCrearProcesosAleatorios() {
     try (FileWriter writer = new FileWriter("procesos.csv")) {
@@ -226,6 +232,67 @@ private void accionCrearProcesosAleatorios() {
     }
 }
 
+
+private void accionCargarProcesosCsv() {
+    try (BufferedReader reader = new BufferedReader(new FileReader("procesos.csv"))) {
+        String linea;
+        boolean primeraLinea = true;
+        int procesosCargados = 0;
+        
+        while ((linea = reader.readLine()) != null) {
+            // Saltar la línea de encabezado
+            if (primeraLinea) {
+                primeraLinea = false;
+                continue;
+            }
+            
+            // Procesar la línea
+            String[] campos = linea.split(",");
+            
+            if (campos.length >= 6) {
+                // Limpiar comillas y espacios
+                String id = campos[0].replace("\"", "").trim();
+                String nombreArchivo = campos[1].replace("\"", "").trim();
+                String estado = campos[2].replace("\"", "").trim();
+                String operacion = campos[3].replace("\"", "").trim();
+                int bloques = Integer.parseInt(campos[4].replace("\"", "").trim());
+                String usuario = campos[5].replace("\"", "").trim();
+                
+                // Usar requestCreateFile para enviar el proceso al sistema
+                requestCreateFile(nombreArchivo, bloques, usuario);
+                procesosCargados++;
+                
+                System.out.println("Proceso cargado: " + nombreArchivo + " (" + bloques + " bloques)");
+            }
+        }
+        
+        // Mostrar mensaje de éxito
+        JOptionPane.showMessageDialog(gui, 
+            "Se han cargado " + procesosCargados + " procesos desde 'procesos.csv' al sistema", 
+            "Información",
+            JOptionPane.INFORMATION_MESSAGE);
+        
+    } catch (FileNotFoundException e) {
+        System.err.println("Archivo no encontrado: " + e.getMessage());
+        JOptionPane.showMessageDialog(gui, 
+            "Archivo 'procesos.csv' no encontrado", 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
+    } catch (IOException e) {
+        System.err.println("Error al leer el archivo CSV: " + e.getMessage());
+        JOptionPane.showMessageDialog(gui, 
+            "Error al leer el archivo CSV: " + e.getMessage(), 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
+    } catch (NumberFormatException e) {
+        System.err.println("Error en el formato de los datos: " + e.getMessage());
+        JOptionPane.showMessageDialog(gui, 
+            "Error en el formato de los datos del CSV", 
+            "Error", 
+            JOptionPane.ERROR_MESSAGE);
+    }
+}
+          
 
     public void updateGUI() {
 
@@ -400,7 +467,8 @@ private void accionCrearProcesosAleatorios() {
         this.gui.getBtnEliminar().setVisible(true); // jButton2
         this.gui.getBtnCrearArchivo().setVisible(true); // jButton3
         this.gui.getBtnCrearProcesosAleatorios().setVisible(true); // Nuevo botón
-
+        this.gui.getBtnCargarProcesosCsv().setVisible(true); 
+        
         this.gui.getComboPlanificador().setVisible(true); // jComboBox1
         this.gui.getLabelPlanificador().setVisible(true); // jLabel2
     }

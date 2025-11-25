@@ -41,7 +41,9 @@ public class MainJFrame extends javax.swing.JFrame {
 
         // Botón nuevo
         private javax.swing.JButton btnCrearProcesosAleatorios;
-
+        
+        private javax.swing.JButton btnCargarProcesosCsv;
+        
         public MainJFrame() {
                 // Configurar el tema antes de iniciar componentes
                 UITheme.setupUI();
@@ -57,6 +59,9 @@ public class MainJFrame extends javax.swing.JFrame {
                 UITheme.styleButton(jButton3, false); // Crear Archivo
 
                 // Inicializar y estilizar el nuevo botón
+                btnCargarProcesosCsv = new javax.swing.JButton("Cargar Procesos");
+                UITheme.styleButton(btnCargarProcesosCsv, false);
+                
                 btnCrearProcesosAleatorios = new javax.swing.JButton("Crear 10 Procesos");
                 UITheme.styleButton(btnCrearProcesosAleatorios, false);
 
@@ -156,7 +161,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 pnlControls.add(jButton2); // Eliminar
                 pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
 
-                pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
+                pnlControls.add(btnCargarProcesosCsv);
 
                 this.getContentPane().add(pnlControls, BorderLayout.NORTH);
                 this.getContentPane().add(jSplitPanePrincipal, BorderLayout.CENTER);
@@ -218,6 +223,10 @@ public class MainJFrame extends javax.swing.JFrame {
 
         public javax.swing.JButton getBtnCrearProcesosAleatorios() {
                 return btnCrearProcesosAleatorios;
+        }
+        
+        public javax.swing.JButton getBtnCargarProcesosCsv() {
+                return btnCargarProcesosCsv;
         }
 
         public javax.swing.JRadioButton getRadioModoAdmin() {
