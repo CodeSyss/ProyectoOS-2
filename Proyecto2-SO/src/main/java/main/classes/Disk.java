@@ -15,6 +15,8 @@ public class Disk {
 
     private Process[] blockOwners; // asignar color en posicion correspondiente
 
+    private static final int BLOCK_SIZE = 512;
+    
     private int totalBlocks;
     private int headPosition = 0; // Posición actual del cabezal
 
@@ -29,6 +31,53 @@ public class Disk {
         }
     }
 
+    public int getBlockSize() {
+        return BLOCK_SIZE;
+    }
+    
+    public int getNextBlock(int currentBlock) {
+        if (currentBlock < 0 || currentBlock >= totalBlocks) {
+            return -1;
+        }
+        int next = allocationTable[currentBlock];
+        return (next == -1 || next == 0) ? -1 : next;
+    }
+    
+    public byte[] readBlock(int blockNumber) {
+        if (blockNumber < 0 || blockNumber >= totalBlocks) {
+            throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
+        }
+        if (allocationTable[blockNumber] == 0) {
+            throw new IllegalStateException("Bloque " + blockNumber + " está libre");
+        }
+        
+        // Simulamos datos - en un sistema real aquí leerías del almacenamiento
+        // Por ahora devolvemos datos de ejemplo basados en el número de bloque
+        byte[] data = new byte[BLOCK_SIZE];
+        String blockInfo = "Block_" + blockNumber + "_Process_" + 
+                          (blockOwners[blockNumber] != null ? blockOwners[blockNumber].getProcessName() : "Unknown");
+        byte[] infoBytes = blockInfo.getBytes();
+        System.arraycopy(infoBytes, 0, data, 0, Math.min(infoBytes.length, BLOCK_SIZE));
+        
+        return data;
+    }
+    
+    public void writeBlock(int blockNumber, byte[] data) {
+        if (blockNumber < 0 || blockNumber >= totalBlocks) {
+            throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
+        }
+        
+        // En un sistema real aquí escribirías al almacenamiento físico
+        // Por ahora solo registramos la operación
+        System.out.println("Disk: Escritura física en bloque " + blockNumber + 
+                          " (Tamaño: " + data.length + " bytes)");
+        
+        // Marcamos el bloque como ocupado si no lo estaba
+        if (allocationTable[blockNumber] == 0) {
+            allocationTable[blockNumber] = -1;
+        }
+    }
+    
     // Asignar bloques
     public int assignBlocks(Process owner, int blocksNeeded) {
         if (blocksNeeded <= 0) {
