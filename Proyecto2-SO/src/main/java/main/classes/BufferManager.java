@@ -136,6 +136,25 @@ public class BufferManager {
         }
     }
     
+ 
+public java.util.List<BufferInfo> getBufferInfo() {
+    java.util.List<BufferInfo> info = new java.util.ArrayList<>();
+    for (int i = 0; i < bufferSize; i++) {
+        BufferBlock block = buffer[i];
+        if (block != null) {
+            info.add(new BufferInfo(
+                i,
+                block.getDiskBlockNumber(),
+                block.isDirty(),
+                block.getLastAccessTime(),
+                block.getAccessCount(),
+                block.getData().length
+            ));
+        }
+    }
+    return info;
+}
+    
     /**
      * Sincroniza todos los bloques dirty con el disco
      */
