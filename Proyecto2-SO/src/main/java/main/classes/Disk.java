@@ -5,6 +5,7 @@
 package main.classes;
 
 import java.awt.Color;
+import java.util.concurrent.Semaphore;
 
 /**
  *
@@ -16,9 +17,13 @@ public class Disk {
     private Process[] blockOwners; // asignar color en posicion correspondiente
 
     private static final int BLOCK_SIZE = 512;
-    
+
     private int totalBlocks;
     private int headPosition = 0; // Posición actual del cabezal
+
+    // Semáforo binario (mutex) para exclusión mutua en operaciones críticas del
+    // disco
+    private final Semaphore diskMutex = new Semaphore(1);
 
     public Disk(int totalBlocks) {
         this.totalBlocks = totalBlocks;
@@ -34,7 +39,7 @@ public class Disk {
     public int getBlockSize() {
         return BLOCK_SIZE;
     }
-    
+
     public int getNextBlock(int currentBlock) {
         if (currentBlock < 0 || currentBlock >= totalBlocks) {
             return -1;
@@ -42,92 +47,129 @@ public class Disk {
         int next = allocationTable[currentBlock];
         return (next == -1 || next == 0) ? -1 : next;
     }
-    
+
     public byte[] readBlock(int blockNumber) {
-        if (blockNumber < 0 || blockNumber >= totalBlocks) {
-            throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
+        try {
+            diskMutex.acquire(); // SECCIÓN CRÍTICA: Entrada
+
+            if (blockNumber < 0 || blockNumber >= totalBlocks) {
+                throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
+            }
+            if (allocationTable[blockNumber] == 0) {
+                throw new IllegalStateException("Bloque " + blockNumber + " está libre");
+            }
+
+            // Simulamos datos - en un sistema real aquí leerías del almacenamiento
+            // Por ahora devolvemos datos de ejemplo basados en el número de bloque
+            byte[] data = new byte[BLOCK_SIZE];
+            String blockInfo = "Block_" + blockNumber + "_Process_" +
+                    (blockOwners[blockNumber] != null ? blockOwners[blockNumber].getProcessName() : "Unknown");
+            byte[] infoBytes = blockInfo.getBytes();
+            System.arraycopy(infoBytes, 0, data, 0, Math.min(infoBytes.length, BLOCK_SIZE));
+
+            return data;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Lectura de bloque interrumpida", e);
+        } finally {
+            diskMutex.release(); // SECCIÓN CRÍTICA: Salida
         }
-        if (allocationTable[blockNumber] == 0) {
-            throw new IllegalStateException("Bloque " + blockNumber + " está libre");
-        }
-        
-        // Simulamos datos - en un sistema real aquí leerías del almacenamiento
-        // Por ahora devolvemos datos de ejemplo basados en el número de bloque
-        byte[] data = new byte[BLOCK_SIZE];
-        String blockInfo = "Block_" + blockNumber + "_Process_" + 
-                          (blockOwners[blockNumber] != null ? blockOwners[blockNumber].getProcessName() : "Unknown");
-        byte[] infoBytes = blockInfo.getBytes();
-        System.arraycopy(infoBytes, 0, data, 0, Math.min(infoBytes.length, BLOCK_SIZE));
-        
-        return data;
     }
-    
+
     public void writeBlock(int blockNumber, byte[] data) {
-        if (blockNumber < 0 || blockNumber >= totalBlocks) {
-            throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
-        }
-        
-        // En un sistema real aquí escribirías al almacenamiento físico
-        // Por ahora solo registramos la operación
-        System.out.println("Disk: Escritura física en bloque " + blockNumber + 
-                          " (Tamaño: " + data.length + " bytes)");
-        
-        // Marcamos el bloque como ocupado si no lo estaba
-        if (allocationTable[blockNumber] == 0) {
-            allocationTable[blockNumber] = -1;
+        try {
+            diskMutex.acquire(); // SECCIÓN CRÍTICA: Entrada
+
+            if (blockNumber < 0 || blockNumber >= totalBlocks) {
+                throw new IllegalArgumentException("Número de bloque inválido: " + blockNumber);
+            }
+
+            // En un sistema real aquí escribirías al almacenamiento físico
+            // Por ahora solo registramos la operación
+            System.out.println("Disk: Escritura física en bloque " + blockNumber +
+                    " (Tamaño: " + data.length + " bytes)");
+
+            // Marcamos el bloque como ocupado si no lo estaba
+            if (allocationTable[blockNumber] == 0) {
+                allocationTable[blockNumber] = -1;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Escritura de bloque interrumpida", e);
+        } finally {
+            diskMutex.release(); // SECCIÓN CRÍTICA: Salida
         }
     }
-    
+
     // Asignar bloques
     public int assignBlocks(Process owner, int blocksNeeded) {
-        if (blocksNeeded <= 0) {
-            return -1;
-        }
+        try {
+            diskMutex.acquire(); // SECCIÓN CRÍTICA: Entrada - Protege la tabla de asignación
 
-        int firstBlock = -1;
-        int previousBlock = -1;
-        int blocksFound = 0;
+            if (blocksNeeded <= 0) {
+                return -1;
+            }
 
-        for (int i = 0; i < this.totalBlocks; i++) {
-            if (allocationTable[i] == 0) {
-                blocksFound++;
+            int firstBlock = -1;
+            int previousBlock = -1;
+            int blocksFound = 0;
 
-                allocationTable[i] = -1;
-                blockOwners[i] = owner;
+            for (int i = 0; i < this.totalBlocks; i++) {
+                if (allocationTable[i] == 0) {
+                    blocksFound++;
 
-                if (firstBlock == -1) {
-                    firstBlock = i;
-                } else {
-                    allocationTable[previousBlock] = i;
-                }
+                    allocationTable[i] = -1;
+                    blockOwners[i] = owner;
 
-                previousBlock = i;
+                    if (firstBlock == -1) {
+                        firstBlock = i;
+                    } else {
+                        allocationTable[previousBlock] = i;
+                    }
 
-                if (blocksFound == blocksNeeded) {
-                    System.out.println("Disk: Asignado" + blocksNeeded + " bloques para " + owner.getProcessName()
-                            + ". Primer bloque: " + firstBlock);
-                    return firstBlock; // Success!
+                    previousBlock = i;
+
+                    if (blocksFound == blocksNeeded) {
+                        System.out.println("Disk: Asignado " + blocksNeeded + " bloques para " + owner.getProcessName()
+                                + ". Primer bloque: " + firstBlock);
+                        return firstBlock; // Success!
+                    }
                 }
             }
+            System.err.println("Disk: ¡Espacio insuficiente! Error al asignar " + blocksNeeded + " bloques.");
+            return -1;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Disk: Asignación de bloques interrumpida");
+            return -1;
+        } finally {
+            diskMutex.release(); // SECCIÓN CRÍTICA: Salida
         }
-        System.err.println("Disk: ¡Espacio insuficiente! Error al asignar" + blocksNeeded + " bloques.");
-        return -1;
     }
 
     // Liberar bloques
     public void freeBlocks(int startBlock) {
-        int currentBlock = startBlock;
-        int nextBlock;
+        try {
+            diskMutex.acquire(); // SECCIÓN CRÍTICA: Entrada - Protege la tabla de asignación
 
-        while (currentBlock != -1 && currentBlock < totalBlocks) {
-            nextBlock = allocationTable[currentBlock];
+            int currentBlock = startBlock;
+            int nextBlock;
 
-            allocationTable[currentBlock] = 0;
-            blockOwners[currentBlock] = null;
+            while (currentBlock != -1 && currentBlock < totalBlocks) {
+                nextBlock = allocationTable[currentBlock];
 
-            currentBlock = nextBlock;
+                allocationTable[currentBlock] = 0;
+                blockOwners[currentBlock] = null;
+
+                currentBlock = nextBlock;
+            }
+            System.out.println("Disk: Cadena de bloques liberada a partir de " + startBlock);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Disk: Liberación de bloques interrumpida");
+        } finally {
+            diskMutex.release(); // SECCIÓN CRÍTICA: Salida
         }
-        System.out.println("Disk: Cadena de bloques liberada a partir de " + startBlock);
     }
 
     // --- GETTERS (for the GUI) ---
