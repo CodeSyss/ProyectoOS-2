@@ -11,12 +11,12 @@ package helpers;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
- 
+
 public class CustomQueue<T> {
 
     private Node<T> front; // El primer nodo de la cola (cabeza)
-    private Node<T> rear;  // El último nodo de la cola (cola)
-    private int size;      // El número de elementos en la cola
+    private Node<T> rear; // El último nodo de la cola (cola)
+    private int size; // El número de elementos en la cola
 
     /**
      * Constructor para inicializar una cola vacía.
@@ -32,7 +32,7 @@ public class CustomQueue<T> {
      *
      * @param data El elemento a encolar.
      */
-    public void enqueue(T data) {           //ENCOLAR
+    public synchronized void enqueue(T data) { // ENCOLAR - SINCRONIZADO
         Node<T> newNode = new Node<>(data);
 
         if (isEmpty()) {
@@ -49,9 +49,9 @@ public class CustomQueue<T> {
      * Elimina y devuelve el elemento del frente (front) de la cola.
      *
      * @return El elemento que estaba al frente de la cola, o null si la cola
-     * está vacía.
+     *         está vacía.
      */
-    public T dequeue() {            //DESENCOLAR
+    public synchronized T dequeue() { // DESENCOLAR - SINCRONIZADO
         if (isEmpty()) {
             return null;
         }
@@ -71,7 +71,7 @@ public class CustomQueue<T> {
      *
      * @return El elemento al frente de la cola, o null si está vacía.
      */
-    public T peek() {
+    public synchronized T peek() {
         if (isEmpty()) {
             return null;
         }
@@ -83,7 +83,7 @@ public class CustomQueue<T> {
      *
      * @return true si la cola no tiene elementos.
      */
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return size == 0;
     }
 
@@ -92,7 +92,7 @@ public class CustomQueue<T> {
      *
      * @return El tamaño actual de la cola.
      */
-    public int size() {
+    public synchronized int size() {
         return size;
     }
 
@@ -147,7 +147,7 @@ public class CustomQueue<T> {
         };
     }
 
-    public boolean remove(T dataToRemove) {
+    public synchronized boolean remove(T dataToRemove) {
         if (isEmpty() || dataToRemove == null) {
             return false;
         }
