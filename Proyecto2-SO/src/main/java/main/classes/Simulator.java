@@ -58,6 +58,10 @@ public class Simulator implements ActionListener {
         this.gui.getJTreeArchivos().setModel(treeModel);
         addListeners();
 
+        // Establecer modo Admin por defecto
+        this.gui.getRadioModoAdmin().setSelected(true);
+        logicaModoAdmin();
+
         // INICIA EL RELOJ
         // Se disparará cada 2000ms (2 segundos)
         int delay = 2000;
@@ -135,6 +139,48 @@ public class Simulator implements ActionListener {
         updateGUI();
     }
 
+    public void requestReadFile(String path, String username) {
+        int randomCylinder = (int) (Math.random() * 350);
+
+        String processName = username + " (Read " + path + ")";
+        Process p = new Process(processName);
+        p.setState(Process.ProcessState.READY);
+        p.setCurrentOperation("LEER " + path + " [Cyl: " + randomCylinder + "]");
+
+        this.masterProcessList.add(p);
+
+        IoRequest request = new IoRequest(
+                p,
+                IoRequest.OperationType.READ_FILE,
+                path,
+                0, // Read doesn't need block count
+                randomCylinder);
+
+        this.diskRequest.enqueue(request);
+        updateGUI();
+    }
+
+    public void requestUpdateFile(String path, String username) {
+        int randomCylinder = (int) (Math.random() * 350);
+
+        String processName = username + " (Update " + path + ")";
+        Process p = new Process(processName);
+        p.setState(Process.ProcessState.READY);
+        p.setCurrentOperation("ACTUALIZAR " + path + " [Cyl: " + randomCylinder + "]");
+
+        this.masterProcessList.add(p);
+
+        IoRequest request = new IoRequest(
+                p,
+                IoRequest.OperationType.UPDATE_FILE,
+                path,
+                0, // Update doesn't need block count in this simulation
+                randomCylinder);
+
+        this.diskRequest.enqueue(request);
+        updateGUI();
+    }
+
     private void addListeners() {
         this.gui.getBtnCrearArchivo().addActionListener(this);
         this.gui.getBtnCrearDirectorio().addActionListener(this);
@@ -143,6 +189,9 @@ public class Simulator implements ActionListener {
         this.gui.getRadioModoUsuario().addActionListener(this);
         this.gui.getBtnCrearProcesosAleatorios().addActionListener(this);
         this.gui.getBtnCargarProcesosCsv().addActionListener(this);
+        this.gui.getBtnLeer().addActionListener(this);
+        this.gui.getBtnActualizar().addActionListener(this);
+        this.gui.getBtnGuardarHistorial().addActionListener(this);
     }
 
     public void onCreationSuccess(Process process, String path, IoRequest.OperationType type, int startBlock,
@@ -180,119 +229,243 @@ public class Simulator implements ActionListener {
                 new javax.swing.tree.TreePath(newNodeWrapper.getPath()));
     }
 
-@Override
-public void actionPerformed(ActionEvent e) {
-    Object source = e.getSource();
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object source = e.getSource();
 
-    if (source == this.gui.getBtnCrearArchivo()) {
-        accionCrearArchivo();
-    } else if (source == this.gui.getBtnCrearDirectorio()) {
-        accionCrearDirectorio();
-    } else if (source == this.gui.getBtnEliminar()) {
-        accionEliminar();
-    } else if (source == this.gui.getRadioModoAdmin()) {
-        logicaModoAdmin();
-    } else if (source == this.gui.getRadioModoUsuario()) {
-        logicaModoUsuario();
-    } else if (source == this.gui.getBtnCrearProcesosAleatorios()) {
-        accionCrearProcesosAleatorios();
-    } else if (source == this.gui.getBtnCargarProcesosCsv()) {
-        accionCargarProcesosCsv();
-    }
-}
-
-private void accionCrearProcesosAleatorios() {
-    try (FileWriter writer = new FileWriter("procesos.csv")) {
-        // Escribir encabezado del CSV
-        writer.write("ID,Nombre,Estado,Operacion,Bloques_Solicitados,Usuario\n");
-        
-        // Crear y guardar 10 procesos aleatorios
-        for (int i = 1; i <= 10; i++) {
-            int numBloques = (int) (Math.random() * 10) + 1;
-            String nombreArchivo = "Proceso_Auto_" + i;
-
-            // Escribir directamente en el CSV
-            writer.write(String.format("\"P%d\",\"%s\",\"Solicitado\",\"Crear archivo\",%d,\"Admin\"\n", 
-                i, nombreArchivo, numBloques));
-            
-            requestCreateFile(nombreArchivo, numBloques, "Admin");
+        if (source == this.gui.getBtnCrearArchivo()) {
+            accionCrearArchivo();
+        } else if (source == this.gui.getBtnCrearDirectorio()) {
+            accionCrearDirectorio();
+        } else if (source == this.gui.getBtnEliminar()) {
+            accionEliminar();
+        } else if (source == this.gui.getRadioModoAdmin()) {
+            logicaModoAdmin();
+        } else if (source == this.gui.getRadioModoUsuario()) {
+            logicaModoUsuario();
+        } else if (source == this.gui.getBtnCrearProcesosAleatorios()) {
+            accionCrearProcesosAleatorios();
+        } else if (source == this.gui.getBtnCargarProcesosCsv()) {
+            accionCargarProcesosCsv();
+        } else if (source == this.gui.getBtnLeer()) {
+            accionLeer();
+        } else if (source == this.gui.getBtnActualizar()) {
+            accionActualizar();
+        } else if (source == this.gui.getBtnGuardarHistorial()) {
+            accionGuardarHistorial();
         }
-        
-        JOptionPane.showMessageDialog(gui, 
-            "Se han solicitado 10 procesos aleatorios y guardado en 'procesos.csv'.", 
-            "Información",
-            JOptionPane.INFORMATION_MESSAGE);
-            
-    } catch (IOException e) {
-        System.err.println("Error al guardar procesos en CSV: " + e.getMessage());
-        JOptionPane.showMessageDialog(gui, 
-            "Error al guardar el archivo CSV: " + e.getMessage(), 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
     }
-}
 
+    private void accionCrearProcesosAleatorios() {
+        try (FileWriter writer = new FileWriter("procesos.csv")) {
+            // Escribir encabezado del CSV
+            writer.write("ID,Nombre,Estado,Operacion,Bloques_Solicitados,Usuario\n");
 
-private void accionCargarProcesosCsv() {
-    try (BufferedReader reader = new BufferedReader(new FileReader("procesos.csv"))) {
-        String linea;
-        boolean primeraLinea = true;
-        int procesosCargados = 0;
-        
-        while ((linea = reader.readLine()) != null) {
-            // Saltar la línea de encabezado
-            if (primeraLinea) {
-                primeraLinea = false;
-                continue;
+            // Crear y guardar 10 procesos aleatorios
+            for (int i = 1; i <= 10; i++) {
+                int numBloques = (int) (Math.random() * 10) + 1;
+                String nombreArchivo = "Proceso_Auto_" + i;
+
+                // Escribir directamente en el CSV
+                writer.write(String.format("\"P%d\",\"%s\",\"Solicitado\",\"Crear archivo\",%d,\"Admin\"\n",
+                        i, nombreArchivo, numBloques));
+
+                requestCreateFile(nombreArchivo, numBloques, "Admin");
             }
-            
-            // Procesar la línea
-            String[] campos = linea.split(",");
-            
-            if (campos.length >= 6) {
-                // Limpiar comillas y espacios
-                String id = campos[0].replace("\"", "").trim();
-                String nombreArchivo = campos[1].replace("\"", "").trim();
-                String estado = campos[2].replace("\"", "").trim();
-                String operacion = campos[3].replace("\"", "").trim();
-                int bloques = Integer.parseInt(campos[4].replace("\"", "").trim());
-                String usuario = campos[5].replace("\"", "").trim();
-                
-                // Usar requestCreateFile para enviar el proceso al sistema
-                requestCreateFile(nombreArchivo, bloques, usuario);
-                procesosCargados++;
-                
-                System.out.println("Proceso cargado: " + nombreArchivo + " (" + bloques + " bloques)");
-            }
+
+            JOptionPane.showMessageDialog(gui,
+                    "Se han solicitado 10 procesos aleatorios y guardado en 'procesos.csv'.",
+                    "Información",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (IOException e) {
+            System.err.println("Error al guardar procesos en CSV: " + e.getMessage());
+            JOptionPane.showMessageDialog(gui,
+                    "Error al guardar el archivo CSV: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
-        
-        // Mostrar mensaje de éxito
-        JOptionPane.showMessageDialog(gui, 
-            "Se han cargado " + procesosCargados + " procesos desde 'procesos.csv' al sistema", 
-            "Información",
-            JOptionPane.INFORMATION_MESSAGE);
-        
-    } catch (FileNotFoundException e) {
-        System.err.println("Archivo no encontrado: " + e.getMessage());
-        JOptionPane.showMessageDialog(gui, 
-            "Archivo 'procesos.csv' no encontrado", 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
-    } catch (IOException e) {
-        System.err.println("Error al leer el archivo CSV: " + e.getMessage());
-        JOptionPane.showMessageDialog(gui, 
-            "Error al leer el archivo CSV: " + e.getMessage(), 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
-    } catch (NumberFormatException e) {
-        System.err.println("Error en el formato de los datos: " + e.getMessage());
-        JOptionPane.showMessageDialog(gui, 
-            "Error en el formato de los datos del CSV", 
-            "Error", 
-            JOptionPane.ERROR_MESSAGE);
     }
-}
-          
+
+    private void accionCargarProcesosCsv() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("procesos.csv"))) {
+            String linea;
+            boolean primeraLinea = true;
+            int procesosCargados = 0;
+
+            while ((linea = reader.readLine()) != null) {
+                // Saltar la línea de encabezado
+                if (primeraLinea) {
+                    primeraLinea = false;
+                    continue;
+                }
+
+                // Procesar la línea
+                String[] campos = linea.split(",");
+
+                if (campos.length >= 6) {
+                    // Limpiar comillas y espacios
+                    String id = campos[0].replace("\"", "").trim();
+                    String nombreArchivo = campos[1].replace("\"", "").trim();
+                    String estado = campos[2].replace("\"", "").trim();
+                    String operacion = campos[3].replace("\"", "").trim();
+                    int bloques = Integer.parseInt(campos[4].replace("\"", "").trim());
+                    String usuario = campos[5].replace("\"", "").trim();
+
+                    // Usar requestCreateFile para enviar el proceso al sistema
+                    requestCreateFile(nombreArchivo, bloques, usuario);
+                    procesosCargados++;
+
+                    System.out.println("Proceso cargado: " + nombreArchivo + " (" + bloques + " bloques)");
+                }
+            }
+
+            // Mostrar mensaje de éxito
+            JOptionPane.showMessageDialog(gui,
+                    "Se han cargado " + procesosCargados + " procesos desde 'procesos.csv' al sistema",
+                    "Información",
+                    JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (FileNotFoundException e) {
+            System.err.println("Archivo no encontrado: " + e.getMessage());
+            JOptionPane.showMessageDialog(gui,
+                    "Archivo 'procesos.csv' no encontrado",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo CSV: " + e.getMessage());
+            JOptionPane.showMessageDialog(gui,
+                    "Error al leer el archivo CSV: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        } catch (NumberFormatException e) {
+            System.err.println("Error en el formato de los datos: " + e.getMessage());
+            JOptionPane.showMessageDialog(gui,
+                    "Error en el formato de los datos del CSV",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void accionLeer() {
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) this.gui.getJTreeArchivos()
+                .getLastSelectedPathComponent();
+
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(gui, "Por favor, seleccione un archivo para leer.", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        FileSystemNode nodeData = (FileSystemNode) nodoSeleccionado.getUserObject();
+
+        if (!(nodeData instanceof File)) {
+            JOptionPane.showMessageDialog(gui, "Por favor, seleccione un archivo (no un directorio).", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        requestReadFile(nodeData.getName(), getCurrentUserMode());
+    }
+
+    private void accionActualizar() {
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) this.gui.getJTreeArchivos()
+                .getLastSelectedPathComponent();
+
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(gui, "Por favor, seleccione un archivo o directorio para renombrar.", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        FileSystemNode nodeData = (FileSystemNode) nodoSeleccionado.getUserObject();
+
+        // No permitir renombrar el directorio raíz
+        if (nodeData == rootNodeData) {
+            JOptionPane.showMessageDialog(gui, "No se puede renombrar el directorio raíz.", "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Determinar si es archivo o directorio
+        String tipo = nodeData.isDirectory() ? "directorio" : "archivo";
+        String nombreActual = nodeData.getName();
+
+        // Solicitar nuevo nombre
+        String nuevoNombre = JOptionPane.showInputDialog(gui,
+                "Ingrese el nuevo nombre para el " + tipo + ":",
+                nombreActual);
+
+        if (nuevoNombre == null || nuevoNombre.trim().isEmpty()) {
+            return; // Usuario canceló o no ingresó nada
+        }
+
+        // Actualizar el nombre del nodo
+        nodeData.setName(nuevoNombre.trim());
+
+        // Actualizar la visualización en el JTree
+        DefaultTreeModel treeModel = (DefaultTreeModel) this.gui.getJTreeArchivos().getModel();
+        treeModel.nodeChanged(nodoSeleccionado);
+
+        // Actualizar la GUI completa
+        updateGUI();
+
+        JOptionPane.showMessageDialog(gui,
+                "El " + tipo + " ha sido renombrado exitosamente a: " + nuevoNombre,
+                "Éxito",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void accionGuardarHistorial() {
+        // 1. Verificar si hay procesos
+        if (masterProcessList.isEmpty()) {
+            JOptionPane.showMessageDialog(gui, "No hay procesos en el historial para guardar.", "Historial Vacío",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        try (FileWriter writer = new FileWriter("procesos.csv")) {
+            // 2. Escribir el encabezado del CSV
+            writer.write("ID,Nombre,Estado,Operacion,Bloques_Solicitados,Usuario\n");
+
+            // 3. Iterar sobre TODOS los procesos en masterProcessList
+            for (int i = 0; i < masterProcessList.size(); i++) {
+                Process p = masterProcessList.get(i);
+
+                // 4. Extraer información de cada proceso
+                String id = "P" + p.getProcessID();
+                String nombre = p.getProcessName();
+                String estado = p.getState().toString();
+                String operacion = p.getCurrentOperation();
+
+                // 5. Extraer el número de bloques de la operación
+                int bloques = 0;
+                if (operacion != null && operacion.contains("(") && operacion.contains("blq)")) {
+                    try {
+                        String num = operacion.substring(operacion.indexOf('(') + 1, operacion.indexOf("blq)"));
+                        bloques = Integer.parseInt(num.trim());
+                    } catch (Exception ex) {
+                        bloques = 0;
+                    }
+                }
+
+                // 6. Determinar el usuario (Admin o User)
+                String usuario = nombre.startsWith("Admin") ? "Admin" : "User";
+
+                // 7. Escribir la línea en el CSV
+                writer.write(String.format("\"%s\",\"%s\",\"%s\",\"%s\",%d,\"%s\"\n",
+                        id, nombre, estado, operacion, bloques, usuario));
+            }
+
+            // 8. Mostrar mensaje de éxito
+            JOptionPane.showMessageDialog(gui,
+                    "Historial de " + masterProcessList.size() + " procesos guardado exitosamente en 'procesos.csv'",
+                    "Guardado Exitoso", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(gui, "Error al guardar el historial: " + e.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     public void updateGUI() {
 
@@ -374,7 +547,7 @@ private void accionCargarProcesosCsv() {
             JOptionPane.showMessageDialog(gui, "Número de bloques inválido.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        requestCreateFile(nombreArchivo, numBloques, "Admin");
+        requestCreateFile(nombreArchivo, numBloques, getCurrentUserMode());
     }
 
     private void accionCrearDirectorio() {
@@ -392,7 +565,7 @@ private void accionCargarProcesosCsv() {
         if (nombreDir == null || nombreDir.trim().isEmpty()) {
             return;
         }
-        requestCreateDirectory(nombreDir, "Admin");
+        requestCreateDirectory(nombreDir, getCurrentUserMode());
     }
 
     private void accionEliminar() {
@@ -459,6 +632,11 @@ private void accionCargarProcesosCsv() {
         }
     }
 
+    // Método helper para obtener el modo actual del usuario
+    private String getCurrentUserMode() {
+        return this.gui.getRadioModoAdmin().isSelected() ? "Admin" : "User";
+    }
+
     private void logicaModoAdmin() {
         System.out.println("Controlador: Modo Admin activado.");
         this.gui.getRadioModoUsuario().setSelected(false);
@@ -467,8 +645,11 @@ private void accionCargarProcesosCsv() {
         this.gui.getBtnEliminar().setVisible(true); // jButton2
         this.gui.getBtnCrearArchivo().setVisible(true); // jButton3
         this.gui.getBtnCrearProcesosAleatorios().setVisible(true); // Nuevo botón
-        this.gui.getBtnCargarProcesosCsv().setVisible(true); 
-        
+        this.gui.getBtnCargarProcesosCsv().setVisible(true);
+        this.gui.getBtnLeer().setVisible(true);
+        this.gui.getBtnActualizar().setVisible(true);
+        this.gui.getBtnGuardarHistorial().setVisible(true);
+
         this.gui.getComboPlanificador().setVisible(true); // jComboBox1
         this.gui.getLabelPlanificador().setVisible(true); // jLabel2
     }
@@ -481,6 +662,10 @@ private void accionCargarProcesosCsv() {
         this.gui.getBtnEliminar().setVisible(false); // jButton2
         this.gui.getBtnCrearArchivo().setVisible(false); // jButton3
         this.gui.getBtnCrearProcesosAleatorios().setVisible(false); // Nuevo botón
+        this.gui.getBtnCargarProcesosCsv().setVisible(false);
+        this.gui.getBtnLeer().setVisible(true); // Users can read
+        this.gui.getBtnActualizar().setVisible(false);
+        this.gui.getBtnGuardarHistorial().setVisible(false);
 
         this.gui.getComboPlanificador().setVisible(false); // jComboBox1
         this.gui.getLabelPlanificador().setVisible(false); // jLabel2

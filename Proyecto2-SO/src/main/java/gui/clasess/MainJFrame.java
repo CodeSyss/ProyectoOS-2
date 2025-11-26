@@ -47,9 +47,13 @@ public class MainJFrame extends javax.swing.JFrame {
 
         // Botón nuevo
         private javax.swing.JButton btnCrearProcesosAleatorios;
-        
+
         private javax.swing.JButton btnCargarProcesosCsv;
-        
+
+        private javax.swing.JButton btnLeer;
+        private javax.swing.JButton btnActualizar;
+        private javax.swing.JButton btnGuardarHistorial;
+
         public MainJFrame() {
                 // Configurar el tema antes de iniciar componentes
                 UITheme.setupUI();
@@ -57,7 +61,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 initComponents();
 
                 initializeBufferManager();
-                
+
                 // Aplicar estilos generales
                 this.getContentPane().setBackground(UITheme.COLOR_BACKGROUND);
 
@@ -67,11 +71,20 @@ public class MainJFrame extends javax.swing.JFrame {
                 UITheme.styleButton(jButton3, false); // Crear Archivo
 
                 // Inicializar y estilizar el nuevo botón
-                btnCargarProcesosCsv = new javax.swing.JButton("Cargar Procesos");
+                btnCargarProcesosCsv = new javax.swing.JButton("Cargar Procesos del .csv");
                 UITheme.styleButton(btnCargarProcesosCsv, false);
-                
+
                 btnCrearProcesosAleatorios = new javax.swing.JButton("Crear 10 Procesos");
                 UITheme.styleButton(btnCrearProcesosAleatorios, false);
+
+                btnLeer = new javax.swing.JButton("Leer");
+                UITheme.styleButton(btnLeer, false);
+
+                btnActualizar = new javax.swing.JButton("Actualizar");
+                UITheme.styleButton(btnActualizar, false);
+
+                btnGuardarHistorial = new javax.swing.JButton("Guardar Historial en el .csv");
+                UITheme.styleButton(btnGuardarHistorial, false);
 
                 // Estilizar Labels
                 jLabel1.setFont(UITheme.FONT_BOLD); // Modo
@@ -120,8 +133,7 @@ public class MainJFrame extends javax.swing.JFrame {
                 jTabbedPane1.add("Gestor de Procesos", new JScrollPane(jTableProcesos));
                 jTabbedPane1.add("Tabla de Asignación", new JScrollPane(jTableAsignacion));
                 jTabbedPane1.setFont(UITheme.FONT_BOLD);
-                
-                
+
                 jTabbedPane1.add("Buffer", new JScrollPane(createBufferTab()));
 
                 // Añadir Visor de Disco
@@ -145,36 +157,52 @@ public class MainJFrame extends javax.swing.JFrame {
                 this.getContentPane().setLayout(new BorderLayout(10, 10));
 
                 // --- PANEL DE CONTROLES (Arriba) ---
-                JPanel pnlControls = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 10));
-                pnlControls.setBackground(UITheme.COLOR_BACKGROUND);
-                pnlControls.setBorder(new javax.swing.border.MatteBorder(0, 0, 1, 0, UITheme.COLOR_SECONDARY));
+                JPanel pnlControlsContainer = new JPanel();
+                pnlControlsContainer.setLayout(new java.awt.BorderLayout());
+                pnlControlsContainer.setBackground(UITheme.COLOR_BACKGROUND);
+                pnlControlsContainer.setBorder(new javax.swing.border.MatteBorder(0, 0, 1, 0, UITheme.COLOR_SECONDARY));
+
+                // Primera fila de controles
+                JPanel pnlControls1 = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 5));
+                pnlControls1.setBackground(UITheme.COLOR_BACKGROUND);
 
                 // Agrupar Radio Buttons
                 javax.swing.ButtonGroup groupModo = new javax.swing.ButtonGroup();
                 groupModo.add(jRadioButton1);
                 groupModo.add(jRadioButton2);
 
-                // Añadir componentes
-                pnlControls.add(jLabel1); // Label "Modo"
-                pnlControls.add(jRadioButton1); // Admin
-                pnlControls.add(jRadioButton2); // Usuario
+                // Añadir componentes a la primera fila
+                pnlControls1.add(jLabel1); // Label "Modo"
+                pnlControls1.add(jRadioButton1); // Admin
+                pnlControls1.add(jRadioButton2); // Usuario
 
-                pnlControls.add(new javax.swing.JSeparator(javax.swing.SwingConstants.VERTICAL));
-                pnlControls.add(javax.swing.Box.createHorizontalStrut(10));
+                pnlControls1.add(new javax.swing.JSeparator(javax.swing.SwingConstants.VERTICAL));
+                pnlControls1.add(javax.swing.Box.createHorizontalStrut(10));
 
-                pnlControls.add(jLabel2); // Label "Planificador"
-                pnlControls.add(jComboBox1); // Combo
+                pnlControls1.add(jLabel2); // Label "Planificador"
+                pnlControls1.add(jComboBox1); // Combo
 
-                pnlControls.add(javax.swing.Box.createHorizontalStrut(20));
+                pnlControls1.add(javax.swing.Box.createHorizontalStrut(20));
 
-                pnlControls.add(jButton3); // Crear Archivo
-                pnlControls.add(jButton1); // Crear Directorio
-                pnlControls.add(jButton2); // Eliminar
-                pnlControls.add(btnCrearProcesosAleatorios); // Nuevo botón
+                pnlControls1.add(btnLeer); // Leer
+                pnlControls1.add(btnActualizar); // Actualizar
+                pnlControls1.add(btnCrearProcesosAleatorios); // Crear 10 Procesos
 
-                pnlControls.add(btnCargarProcesosCsv);
+                // Segunda fila de controles
+                JPanel pnlControls2 = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 15, 5));
+                pnlControls2.setBackground(UITheme.COLOR_BACKGROUND);
 
-                this.getContentPane().add(pnlControls, BorderLayout.NORTH);
+                pnlControls2.add(btnCargarProcesosCsv); // Cargar Procesos del .csv
+                pnlControls2.add(btnGuardarHistorial); // Guardar Historial
+                pnlControls2.add(jButton3); // Crear Archivo
+                pnlControls2.add(jButton1); // Crear Directorio
+                pnlControls2.add(jButton2); // Eliminar
+
+                // Agregar ambas filas al contenedor
+                pnlControlsContainer.add(pnlControls1, BorderLayout.NORTH);
+                pnlControlsContainer.add(pnlControls2, BorderLayout.CENTER);
+
+                this.getContentPane().add(pnlControlsContainer, BorderLayout.NORTH);
                 this.getContentPane().add(jSplitPanePrincipal, BorderLayout.CENTER);
 
                 JPanel pnlStats = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 20, 5));
@@ -203,85 +231,88 @@ public class MainJFrame extends javax.swing.JFrame {
                 this.setSize(1100, 700);
                 this.setLocationRelativeTo(null); // Centrar
         }
-        
-                private JScrollPane createBufferTab() {
-            // Crear el panel de visualización del buffer
-            bufferPanel = new BufferPanel(bufferManager);
-            
-            // Crear panel principal del buffer
-            JPanel bufferMainPanel = new JPanel(new BorderLayout());
-            bufferMainPanel.setBackground(UITheme.COLOR_BACKGROUND);
-            bufferMainPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            
-            // Agregar el panel de visualización
-            bufferMainPanel.add(bufferPanel, BorderLayout.CENTER);
-            
-            // Agregar controles simples
-            JPanel bufferControls = new JPanel(new java.awt.FlowLayout(FlowLayout.LEFT));
-            bufferControls.setBackground(UITheme.COLOR_BACKGROUND);
-            
-            javax.swing.JButton btnRefreshBuffer = new javax.swing.JButton("Actualizar Vista");
-            UITheme.styleButton(btnRefreshBuffer, false);
-            btnRefreshBuffer.addActionListener(e -> updateBufferView());
-            
-            javax.swing.JButton btnFlushBuffer = new javax.swing.JButton("Sincronizar con Disco");
-            UITheme.styleButton(btnFlushBuffer, false);
-            btnFlushBuffer.addActionListener(e -> {
-                bufferManager.flush();
-                updateBufferView();
-                javax.swing.JOptionPane.showMessageDialog(this, "Buffer sincronizado con disco");
-            });
-            
-            javax.swing.JButton btnClearBuffer = new javax.swing.JButton("Limpiar Buffer");
-            UITheme.styleButton(btnClearBuffer, true);
-            btnClearBuffer.addActionListener(e -> {
-                bufferManager.clear();
-                updateBufferView();
-                javax.swing.JOptionPane.showMessageDialog(this, "Buffer limpiado");
-            });
-            
-            // Selector de política
-            javax.swing.JComboBox<String> policyCombo = new javax.swing.JComboBox<>(
-                new String[]{"FIFO", "LRU", "LFU"}
-            );
-            policyCombo.setSelectedItem("FIFO");
-            policyCombo.addActionListener(e -> {
-                String selected = (String) policyCombo.getSelectedItem();
-                ReplacementPolicy newPolicy;
-                switch (selected) {
-                    case "LRU": newPolicy = ReplacementPolicy.LRU; break;
-                    case "LFU": newPolicy = ReplacementPolicy.LFU; break;
-                    default: newPolicy = ReplacementPolicy.FIFO;
-                }
-                bufferManager.setReplacementPolicy(newPolicy);
-                updateBufferView();
-            });
-            
-            bufferControls.add(new javax.swing.JLabel("Política:"));
-            bufferControls.add(policyCombo);
-            bufferControls.add(btnRefreshBuffer);
-            bufferControls.add(btnFlushBuffer);
-            bufferControls.add(btnClearBuffer);
-            
-            bufferMainPanel.add(bufferControls, BorderLayout.SOUTH);
-            
-            // Crear JScrollPane
-            JScrollPane bufferScrollPane = new JScrollPane(bufferMainPanel);
-            bufferScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-            bufferScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-            
-            return bufferScrollPane;
+
+        private JScrollPane createBufferTab() {
+                // Crear el panel de visualización del buffer
+                bufferPanel = new BufferPanel(bufferManager);
+
+                // Crear panel principal del buffer
+                JPanel bufferMainPanel = new JPanel(new BorderLayout());
+                bufferMainPanel.setBackground(UITheme.COLOR_BACKGROUND);
+                bufferMainPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+                // Agregar el panel de visualización
+                bufferMainPanel.add(bufferPanel, BorderLayout.CENTER);
+
+                // Agregar controles simples
+                JPanel bufferControls = new JPanel(new java.awt.FlowLayout(FlowLayout.LEFT));
+                bufferControls.setBackground(UITheme.COLOR_BACKGROUND);
+
+                javax.swing.JButton btnRefreshBuffer = new javax.swing.JButton("Actualizar Vista");
+                UITheme.styleButton(btnRefreshBuffer, false);
+                btnRefreshBuffer.addActionListener(e -> updateBufferView());
+
+                javax.swing.JButton btnFlushBuffer = new javax.swing.JButton("Sincronizar con Disco");
+                UITheme.styleButton(btnFlushBuffer, false);
+                btnFlushBuffer.addActionListener(e -> {
+                        bufferManager.flush();
+                        updateBufferView();
+                        javax.swing.JOptionPane.showMessageDialog(this, "Buffer sincronizado con disco");
+                });
+
+                javax.swing.JButton btnClearBuffer = new javax.swing.JButton("Limpiar Buffer");
+                UITheme.styleButton(btnClearBuffer, true);
+                btnClearBuffer.addActionListener(e -> {
+                        bufferManager.clear();
+                        updateBufferView();
+                        javax.swing.JOptionPane.showMessageDialog(this, "Buffer limpiado");
+                });
+
+                // Selector de política
+                javax.swing.JComboBox<String> policyCombo = new javax.swing.JComboBox<>(
+                                new String[] { "FIFO", "LRU", "LFU" });
+                policyCombo.setSelectedItem("FIFO");
+                policyCombo.addActionListener(e -> {
+                        String selected = (String) policyCombo.getSelectedItem();
+                        ReplacementPolicy newPolicy;
+                        switch (selected) {
+                                case "LRU":
+                                        newPolicy = ReplacementPolicy.LRU;
+                                        break;
+                                case "LFU":
+                                        newPolicy = ReplacementPolicy.LFU;
+                                        break;
+                                default:
+                                        newPolicy = ReplacementPolicy.FIFO;
+                        }
+                        bufferManager.setReplacementPolicy(newPolicy);
+                        updateBufferView();
+                });
+
+                bufferControls.add(new javax.swing.JLabel("Política:"));
+                bufferControls.add(policyCombo);
+                bufferControls.add(btnRefreshBuffer);
+                bufferControls.add(btnFlushBuffer);
+                bufferControls.add(btnClearBuffer);
+
+                bufferMainPanel.add(bufferControls, BorderLayout.SOUTH);
+
+                // Crear JScrollPane
+                JScrollPane bufferScrollPane = new JScrollPane(bufferMainPanel);
+                bufferScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+                bufferScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+                return bufferScrollPane;
         }
 
-        
         private void initializeBufferManager() {
-            bufferManager = new BufferManager(10, ReplacementPolicy.FIFO, myDisk);
+                bufferManager = new BufferManager(10, ReplacementPolicy.FIFO, myDisk);
         }
-        
-         public void updateBufferView() {
-            if (bufferPanel != null) {
-                bufferPanel.updateView();
-            }
+
+        public void updateBufferView() {
+                if (bufferPanel != null) {
+                        bufferPanel.updateView();
+                }
         }
 
         public JTree getJTreeArchivos() {
@@ -315,17 +346,29 @@ public class MainJFrame extends javax.swing.JFrame {
         public javax.swing.JButton getBtnCrearProcesosAleatorios() {
                 return btnCrearProcesosAleatorios;
         }
-        
+
         public javax.swing.JButton getBtnCargarProcesosCsv() {
                 return btnCargarProcesosCsv;
+        }
+
+        public javax.swing.JButton getBtnLeer() {
+                return btnLeer;
+        }
+
+        public javax.swing.JButton getBtnActualizar() {
+                return btnActualizar;
+        }
+
+        public javax.swing.JButton getBtnGuardarHistorial() {
+                return btnGuardarHistorial;
         }
 
         public javax.swing.JRadioButton getRadioModoAdmin() {
                 return jRadioButton1;
         }
-        
-         public BufferManager getBufferManager() {
-            return bufferManager;
+
+        public BufferManager getBufferManager() {
+                return bufferManager;
         }
 
         public javax.swing.JRadioButton getRadioModoUsuario() {
