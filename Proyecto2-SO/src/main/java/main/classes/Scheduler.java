@@ -89,6 +89,21 @@ public class Scheduler {
 
         } else if (request.getType() == IoRequest.OperationType.CREATE_DIRECTORY) {
             bloqueInicial = disk.assignBlocks(process, 1);
+
+        } else if (request.getType() == IoRequest.OperationType.READ_FILE) {
+            // Simular lectura - no hace nada en el disco, solo marca como finalizado
+            process.setState(Process.ProcessState.FINISHED);
+            return;
+
+        } else if (request.getType() == IoRequest.OperationType.UPDATE_FILE) {
+            // Llamar al callback de actualización
+            controller.onUpdateSuccess(process, request.getNodeToUpdate(), request.getNewName());
+            return;
+
+        } else if (request.getType() == IoRequest.OperationType.DELETE) {
+            // Llamar al callback de eliminación
+            controller.onDeleteSuccess(process, request.getNodeToDelete());
+            return;
         }
 
         if (bloqueInicial != -1) {

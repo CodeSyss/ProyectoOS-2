@@ -96,7 +96,7 @@ public class Simulator implements ActionListener {
         String processName = username + " (Create " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("CREAR " + path + " (" + blockCount + " blq) [Cyl: " + randomCylinder + "]");
+        p.setCurrentOperation("CREATE " + path + " (" + blockCount + " blq) [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -121,7 +121,7 @@ public class Simulator implements ActionListener {
         String processName = username + " (Create Dir: " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("CREAR DIR " + path + " [Cyl: " + randomCylinder + "]");
+        p.setCurrentOperation("CREATE DIR " + path + " [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -145,7 +145,7 @@ public class Simulator implements ActionListener {
         String processName = username + " (Read " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("LEER " + path + " [Cyl: " + randomCylinder + "]");
+        p.setCurrentOperation("READ " + path + " [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -160,13 +160,13 @@ public class Simulator implements ActionListener {
         updateGUI();
     }
 
-    public void requestUpdateFile(String path, String username) {
+    public void requestUpdateFile(String path, String username, FileSystemNode nodeToUpdate, String newName) {
         int randomCylinder = (int) (Math.random() * 350);
 
         String processName = username + " (Update " + path + ")";
         Process p = new Process(processName);
         p.setState(Process.ProcessState.READY);
-        p.setCurrentOperation("ACTUALIZAR " + path + " [Cyl: " + randomCylinder + "]");
+        p.setCurrentOperation("UPDATE " + path + " -> " + newName + " [Cyl: " + randomCylinder + "]");
 
         this.masterProcessList.add(p);
 
@@ -176,6 +176,34 @@ public class Simulator implements ActionListener {
                 path,
                 0, // Update doesn't need block count in this simulation
                 randomCylinder);
+
+        // Configurar los campos para UPDATE
+        request.setNodeToUpdate(nodeToUpdate);
+        request.setNewName(newName);
+
+        this.diskRequest.enqueue(request);
+        updateGUI();
+    }
+
+    public void requestDeleteFile(String path, String username, FileSystemNode nodeToDelete) {
+        int randomCylinder = (int) (Math.random() * 350);
+
+        String processName = username + " (Delete " + path + ")";
+        Process p = new Process(processName);
+        p.setState(Process.ProcessState.READY);
+        p.setCurrentOperation("DELETE " + path + " [Cyl: " + randomCylinder + "]");
+
+        this.masterProcessList.add(p);
+
+        IoRequest request = new IoRequest(
+                p,
+                IoRequest.OperationType.DELETE,
+                path,
+                0, // Delete doesn't need block count
+                randomCylinder);
+
+        // Configurar el campo para DELETE
+        request.setNodeToDelete(nodeToDelete);
 
         this.diskRequest.enqueue(request);
         updateGUI();
@@ -227,6 +255,68 @@ public class Simulator implements ActionListener {
 
         this.gui.getJTreeArchivos().scrollPathToVisible(
                 new javax.swing.tree.TreePath(newNodeWrapper.getPath()));
+    }
+
+    public void onUpdateSuccess(Process process, FileSystemNode nodeToUpdate, String newName) {
+        // Actualizar el nombre del nodo
+        nodeToUpdate.setName(newName);
+
+        // Encontrar el nodo en el JTree y actualizarlo
+        DefaultMutableTreeNode rootWrapper = (DefaultMutableTreeNode) this.gui.getJTreeArchivos().getModel().getRoot();
+        DefaultMutableTreeNode nodeWrapper = findNodeInTree(rootWrapper, nodeToUpdate);
+
+        if (nodeWrapper != null) {
+            DefaultTreeModel treeModel = (DefaultTreeModel) this.gui.getJTreeArchivos().getModel();
+            treeModel.nodeChanged(nodeWrapper);
+        }
+
+        process.setState(Process.ProcessState.FINISHED);
+        updateGUI();
+    }
+
+    public void onDeleteSuccess(Process process, FileSystemNode nodeToDelete) {
+        // Liberar bloques del disco
+        if (nodeToDelete instanceof File) {
+            File file = (File) nodeToDelete;
+            disk.freeBlocks(file.getStartingBlock());
+        } else if (nodeToDelete instanceof Directory) {
+            Directory dir = (Directory) nodeToDelete;
+            freeDirectoryBlocks(dir);
+        }
+
+        // Eliminar del árbol de datos
+        Directory parent = (Directory) nodeToDelete.getParent();
+        if (parent != null) {
+            parent.removeChild(nodeToDelete);
+        }
+
+        // Encontrar el nodo en el JTree y eliminarlo
+        DefaultMutableTreeNode rootWrapper = (DefaultMutableTreeNode) this.gui.getJTreeArchivos().getModel().getRoot();
+        DefaultMutableTreeNode nodeWrapper = findNodeInTree(rootWrapper, nodeToDelete);
+
+        if (nodeWrapper != null) {
+            DefaultTreeModel treeModel = (DefaultTreeModel) this.gui.getJTreeArchivos().getModel();
+            treeModel.removeNodeFromParent(nodeWrapper);
+        }
+
+        process.setState(Process.ProcessState.FINISHED);
+        updateGUI();
+    }
+
+    private DefaultMutableTreeNode findNodeInTree(DefaultMutableTreeNode root, FileSystemNode target) {
+        if (root.getUserObject() == target) {
+            return root;
+        }
+
+        for (int i = 0; i < root.getChildCount(); i++) {
+            DefaultMutableTreeNode child = (DefaultMutableTreeNode) root.getChildAt(i);
+            DefaultMutableTreeNode result = findNodeInTree(child, target);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -400,20 +490,8 @@ public class Simulator implements ActionListener {
             return; // Usuario canceló o no ingresó nada
         }
 
-        // Actualizar el nombre del nodo
-        nodeData.setName(nuevoNombre.trim());
-
-        // Actualizar la visualización en el JTree
-        DefaultTreeModel treeModel = (DefaultTreeModel) this.gui.getJTreeArchivos().getModel();
-        treeModel.nodeChanged(nodoSeleccionado);
-
-        // Actualizar la GUI completa
-        updateGUI();
-
-        JOptionPane.showMessageDialog(gui,
-                "El " + tipo + " ha sido renombrado exitosamente a: " + nuevoNombre,
-                "Éxito",
-                JOptionPane.INFORMATION_MESSAGE);
+        // En lugar de renombrar directamente, crear una solicitud de E/S
+        requestUpdateFile(nodeData.getName(), getCurrentUserMode(), nodeData, nuevoNombre.trim());
     }
 
     private void accionGuardarHistorial() {
@@ -595,23 +673,8 @@ public class Simulator implements ActionListener {
             return;
         }
 
-        if (nodeData instanceof File) {
-            File file = (File) nodeData;
-            disk.freeBlocks(file.getStartingBlock());
-        } else if (nodeData instanceof Directory) {
-            Directory dir = (Directory) nodeData;
-            freeDirectoryBlocks(dir);
-        }
-
-        Directory parent = (Directory) nodeData.getParent();
-        if (parent != null) {
-            parent.removeChild(nodeData);
-        }
-
-        DefaultTreeModel treeModel = (DefaultTreeModel) this.gui.getJTreeArchivos().getModel();
-        treeModel.removeNodeFromParent(nodoSeleccionado);
-
-        updateGUI();
+        // En lugar de eliminar directamente, crear una solicitud de E/S
+        requestDeleteFile(nodeData.getName(), getCurrentUserMode(), nodeData);
     }
 
     private void freeDirectoryBlocks(Directory dir) {
